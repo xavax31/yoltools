@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>875595309289-dp0vo21eha2iqi87apu62eoa2iqa8ujb.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.875595309289-dp0vo21eha2iqi87apu62eoa2iqa8ujb</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDvkmeTAH5BP0FMarl-LrRUI2dH-V9dJWw</string>
+	<key>GCM_SENDER_ID</key>
+	<string>875595309289</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.cofondateur.coliglote</string>
+	<key>PROJECT_ID</key>
+	<string>coliglote-5ad60</string>
+	<key>STORAGE_BUCKET</key>
+	<string>coliglote-5ad60.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:875595309289:ios:ee328a7ef9718d5f1ed078</string>
+	<key>DATABASE_URL</key>
+	<string>https://coliglote-5ad60.firebaseio.com</string>
+</dict>
+</plist>

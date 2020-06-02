@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "946383216602",
+    "firebase_url": "https://mugconnect-5d163.firebaseio.com",
+    "project_id": "mugconnect-5d163",
+    "storage_bucket": "mugconnect-5d163.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:946383216602:android:318737fddda8cd66112ae3",
+        "android_client_info": {
+          "package_name": "com.cofondateur.mugconnect"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "946383216602-1etp4mnh1gsqhaq57l10hpmj4vfs0mhp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBw7l-DK_4KnE27ULShX1WBNm8kr5DS_h4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "946383216602-1etp4mnh1gsqhaq57l10hpmj4vfs0mhp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "946383216602-pinn193h9ai88vovm17r701ajf6ra04j.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cofondateur.mugconnect"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

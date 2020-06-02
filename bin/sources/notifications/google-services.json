@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "875595309289",
+    "firebase_url": "https://coliglote-5ad60.firebaseio.com",
+    "project_id": "coliglote-5ad60",
+    "storage_bucket": "coliglote-5ad60.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:875595309289:android:582ce2120a0d7c8e1ed078",
+        "android_client_info": {
+          "package_name": "com.cofondateur.coliglote"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "875595309289-luuamj9sj4hm7vilip7crnsmbmrqd9in.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_geC7Ojdz1ziRbLor-YHXKORdKFUhFZ4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "875595309289-luuamj9sj4hm7vilip7crnsmbmrqd9in.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "875595309289-dp0vo21eha2iqi87apu62eoa2iqa8ujb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cofondateur.coliglote"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

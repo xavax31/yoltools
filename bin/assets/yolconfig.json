@@ -1,0 +1,45 @@
+{
+    "appName": "MyApp",
+    "appID": "com.cofondateur.myapp",
+    "appVersion": "1.0.0",
+    "allowNavigationURLs": [
+        "http://myapp.com",
+        "https://myapp.com"
+    ],
+    "allowIntentURLs": [
+        "whatsapp:*"
+    ],
+    "android": {
+        "version": "^8.1.0",
+        "keystore": {
+            "name": "myapp",
+            "password": "7Su89y5Y27V486rG",
+            "dname": "CN=com.cofondateur.myapp, O=myapp, C=fr",
+            "alias": "myapp"
+        }
+    },
+    "ios": {
+        "version": "^5.0.0"
+    },
+    "features": {
+        "notifications": {
+            "active": true
+        },
+        "contacts": {
+            "active": true,
+            "text": "L'application à besoin d'accéder à vos contacts"
+        },
+        "camera": {
+            "active": true,
+            "text": "L'application nécessite l'accès à la caméra pour prendre des photos"
+        },
+        "photos": {
+            "active": true,
+            "text": "L'application nécessite d'accéder à votre album photos"
+        },
+        "geolocalisation": {
+            "active": true,
+            "text": "need access to localization"
+        }
+    }
+}

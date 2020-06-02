@@ -1,0 +1,24 @@
+{
+  "name": "yoltools",
+  "version": "1.0.1",
+  "description": "generic tool",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "preferGlobal": true,
+  "bin": {
+    "yoltools": "./bin/demo-global.js"
+  },
+  "author": "xb <xb@monrepere.com>",
+  "license": "ISC",
+  "dependencies": {
+    "fs-extra": "^9.0.0",
+    "generate-password": "^1.5.1",
+    "prompt": "^1.0.0",
+    "xml2js": "^0.4.23"
+  }
+}
