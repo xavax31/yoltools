@@ -1,6 +1,6 @@
 {
   "name": "yoltools",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "generic tool",
   "main": "index.js",
   "directories": {
@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "myscript": "node ./myscript.js"
+    "publish": "node ./publish.js"
   },
   "preferGlobal": true,
   "bin": {

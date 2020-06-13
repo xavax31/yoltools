@@ -26,8 +26,8 @@ prompt.get(schema, function (err, result) {
     console.log('Command-line input received:', result);
 
     execSync("git add .", {stdio:[0, 1, 2]});
-    execSync("git commit -m '" + result.commitMessage + "'", {stdio:[0, 1, 2]});
-    execSync("npm version  " + result.version, {stdio:[0, 1, 2]});
+    // execSync("git commit -m '" + result.commitMessage + "'", {stdio:[0, 1, 2]});
+    execSync("npm version  " + result.version + "  -m '" + result.commitMessage + "'", {stdio:[0, 1, 2]});
     execSync("git push --tags", {stdio:[0, 1, 2]});
     execSync("npm publish", {stdio:[0, 1, 2]});
 });
