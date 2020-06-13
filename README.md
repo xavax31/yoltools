@@ -1,4 +1,4 @@
-!! Only for my personal needs, this package is not maintained and useful only for me
+<div style="background-color:orange">!! Only for my personal needs, this package is not maintained and is useful only for me !!</div>
 
 A personal tool to automate the creation of different types of my development stuff, and an example of custom npm global package.
 
