@@ -25,47 +25,125 @@ function help() {
     `);
 }
 
+async function testPromise(value) {
+    setTimeout(() => {
 
-function setEditConfigApplicationAttributeAndroid({configObj, name, value}) {
-    let platformObj = getPlatformObj("android", configObj);
-    let configArr = platformObj["edit-config"] = platformObj["edit-config"] || [];
-
-    let existingElement;
-    for (let i = 0; i < configArr.length; i++) {
-        const element = configArr[i];
-        
-        if (element.application && element.application[0] && element.application[0]["$"]["android:" + name] != undefined) {
-            existingElement = element;
-            break;
+        if (value) {
+            return value;
         }
-    }
+        else {
+            return value;
+        }
+    }, 1000);
+}
 
-    if (!existingElement) {
-        existingElement = {
-            '$': {
-                'xmlns:android': 'http://schemas.android.com/apk/res/android',
-                file: 'app/src/main/AndroidManifest.xml',
-                mode: 'merge',
-                target: '/manifest/application'
-            },
-            application: [ {
-                '$': {
+ function resolveAfter2Seconds(value) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+          if (value) {
+            console.log('resolved')
+
+            resolve(value);
+
+          }
+          else {
+            console.log('reject')
+
+            reject(value);
+
+          }
+      }, 2000);
+    });
+  }
+  
+
+  function rejectAfter2Seconds() {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+          console.log('reject')
+        reject('reject');
+      }, 2000);
+    });
+  }
+  
+  async function asyncCall() {
+    console.log('calling');
+    const result = await resolveAfter2Seconds();
+    console.log(result);
+    // expected output: 'resolved'
+  }
+  
+  async function fonctionAsynchroneOk() {
+    // équivaut à :
+    // return Promise.resolve('résultat');
+    return 'résultat';
+   }
+
+   async function fonctionAsynchroneKo() {
+    // équivaut à :
+    // return Promise.reject(new Error('erreur'));
+    throw new Error('erreur');
+   }
+
+
+
+
+   function getConfigXMLToJSON2() {
+       return new Promise((resolve, reject)=>{
+            var parser = new xml2js.Parser();
+
+            fs.readFile('app-mobile/config.xml', function(err, data) {
+                if (err) {
+                    reject(err);
                 }
-            } ]
-        }
-        configArr.push(existingElement);
+                else {
+                    parser.parseString(data, function (err, result) {
+                        if (err) {
+                            reject(err);
+                        }
+                        else {
+                            resolve(result);
+                        }
+                    });
+                }
+
+            });
+        })
+
     }
 
-    console.log(configArr)
-    existingElement["application"][0]["$"][`android:${name}`] =  `${value}`;
+async function test() {
+    try {
+        let json = await getConfigXMLToJSON2();
+        console.log(json);
+        await resolveAfter2Seconds(true);
+    } catch (error) {
+        console.log(error);
+    }
+
+
+    
+
+    return
+    await resolveAfter2Seconds(true);
+    await resolveAfter2Seconds(false);
+    await resolveAfter2Seconds(true);
+
+
+    return;
+    fonctionAsynchroneOk().then(result=>console.log(result)).catch(err => console.log(err.message))
+
+// fonctionAsynchroneKo().catch(err => console.log(err.message))
+    return
+    // asyncCall();
+    // asyncCall();
+    // asyncCall();
+    resolveAfter2Seconds()
+    .then(()=>rejectAfter2Seconds())
+    .then(()=>resolveAfter2Seconds())
+    .catch(()=>console.log("error"));
 }
 
-
-function test() {
-    copyDir(cwd + "/platforms/android/app/src/main/res", cwd + "/res");
-
-
-}
 
 function create() {
     fs.pathExists(yolConfigPathDest)
@@ -138,13 +216,13 @@ function _createSecond() {
         addPlugin("cordova-plugin-geolocation");
     }
 
-
     createKeystoreAndroid();
+
 
     // Adapt config.xml
     getConfigXMLToJSON(configJSON=>{
 
-        createIconAndSplash();
+        createIconAndSplash({configObj: configJSON});
 
         for (let i = 0; i < json.allowIntentURLs.length; i++) {
             setAllowIntent({configObj: configJSON, href:json.allowIntentURLs[i]})
@@ -222,7 +300,7 @@ function copyTemplateWWW() {
 }
 
 
-function createIconAndSplash() {
+function createIconAndSplash({configObj}) {
     myLibrary.callBash("cp", ["sources/assets/icon.png", path.normalize(cwd+"/icon.png")]);
     myLibrary.callBash("cp", ["sources/assets/splash.png", path.normalize(cwd+"/splash.png")]);
     myLibrary.callBash("cordova-icon", [], {cwd});
@@ -231,12 +309,12 @@ function createIconAndSplash() {
 
     // now needed for android
     copyDir(cwd + "/platforms/android/app/src/main/res", cwd + "/res");
-    setIcon({configObj: configJSON, platform:"android", src: "res/mipmap-ldpi/icon.png", density:"ldpi"})
-    setIcon({configObj: configJSON, platform:"android", src: "res/mipmap-mdpi/icon.png", density:"mdpi"})
-    setIcon({configObj: configJSON, platform:"android", src: "res/mipmap-hdpi/icon.png", density:"hdpi"})
-    setIcon({configObj: configJSON, platform:"android", src: "res/mipmap-xhdpi/icon.png", density:"xhdpi"})
-    setIcon({configObj: configJSON, platform:"android", src: "res/mipmap-xxhdpi/icon.png", density:"xxhdpi"})
-    setIcon({configObj: configJSON, platform:"android", src: "res/mipmap-xxxhdpi/icon.png", density:"xxxhdpi"})
+    setIcon({configObj, platform:"android", src: "res/mipmap-ldpi/icon.png", density:"ldpi"})
+    setIcon({configObj, platform:"android", src: "res/mipmap-mdpi/icon.png", density:"mdpi"})
+    setIcon({configObj, platform:"android", src: "res/mipmap-hdpi/icon.png", density:"hdpi"})
+    setIcon({configObj, platform:"android", src: "res/mipmap-xhdpi/icon.png", density:"xhdpi"})
+    setIcon({configObj, platform:"android", src: "res/mipmap-xxhdpi/icon.png", density:"xxhdpi"})
+    setIcon({configObj, platform:"android", src: "res/mipmap-xxxhdpi/icon.png", density:"xxxhdpi"})
 }
 
 
@@ -407,31 +485,37 @@ function setEditConfigIOS({configObj, name, value, mode="merge"}) {
 }
 
 
-function setEditConfigAndroid({configObj, name, value, mode="merge"}) {
+function setEditConfigApplicationAttributeAndroid({configObj, name, value}) {
     let platformObj = getPlatformObj("android", configObj);
     let configArr = platformObj["edit-config"] = platformObj["edit-config"] || [];
-    
-    let paramObj = null;
 
+    let existingElement;
     for (let i = 0; i < configArr.length; i++) {
-        if (configArr[i]["$"].target == name) {
-            paramObj = configArr[i];
+        const element = configArr[i];
+        
+        if (element.application && element.application[0] && element.application[0]["$"]["android:" + name] != undefined) {
+            existingElement = element;
             break;
         }
     }
-    if (!paramObj) {
-        paramObj = {
-            "$": {file: "*-Info.plist", mode, target: name},
-            string: value
-        }
-        configArr.push(paramObj);
-        console.log(paramObj)
-        console.log(configArr)
 
+    if (!existingElement) {
+        existingElement = {
+            '$': {
+                'xmlns:android': 'http://schemas.android.com/apk/res/android',
+                file: 'app/src/main/AndroidManifest.xml',
+                mode: 'merge',
+                target: '/manifest/application'
+            },
+            application: [ {
+                '$': {
+                }
+            } ]
+        }
+        configArr.push(existingElement);
     }
-    else {
-        paramObj["string"] = value;
-    }
+
+    existingElement["application"][0]["$"][`android:${name}`] =  `${value}`;
 }
 
 
