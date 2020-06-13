@@ -28,4 +28,3 @@ prompt.get(schema, function (err, result) {
     execSync("git push --follow-tags", {stdio:[0, 1, 2]});
     execSync("npm publish", {stdio:[0, 1, 2]});
 });
-//test 3
