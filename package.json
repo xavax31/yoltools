@@ -1,6 +1,6 @@
 {
   "name": "yoltools",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "generic tool",
   "main": "index.js",
   "directories": {
@@ -9,7 +9,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "gitcommit": "node ./scripts/gitac.js",
-    "publish": "node ./scripts/publish.js"
+    "publishNewVersion": "node ./scripts/publish.js"
   },
   "preferGlobal": true,
   "bin": {
