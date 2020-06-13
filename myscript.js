@@ -29,5 +29,5 @@ prompt.get(schema, function (err, result) {
     execSync("git commit -m '" + result.commitMessage + "'", {stdio:[0, 1, 2]});
     execSync("npm version  " + result.version, {stdio:[0, 1, 2]});
     execSync("git push --tags", {stdio:[0, 1, 2]});
-    execSync("npm run publish", {stdio:[0, 1, 2]});
+    execSync("npm publish", {stdio:[0, 1, 2]});
 });
