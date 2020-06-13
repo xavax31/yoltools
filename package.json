@@ -1,17 +1,22 @@
 {
   "name": "yoltools",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "generic tool",
   "main": "index.js",
   "directories": {
     "lib": "lib"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "myscript": "node ./myscript.js"
   },
   "preferGlobal": true,
   "bin": {
     "yoltools": "./bin/demo-global.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xavax31/yoltools.git"
   },
   "author": "xb <xb@monrepere.com>",
   "license": "ISC",
