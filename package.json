@@ -12,7 +12,7 @@
   },
   "preferGlobal": true,
   "bin": {
-    "yoltools": "./bin/demo-global.js"
+    "yoltools": "./bin/yoltools.js"
   },
   "repository": {
     "type": "git",

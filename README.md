@@ -24,7 +24,8 @@ Cependant le dépot git ne peut pas etre présent dans ce dossier, car pour test
 Pour pouvoir donc modifier le code du package, l'utiliser en local directement sans publier, et pouvoir tester l'install globale via npm, 2 solutions:
 
 1 - Travailler directement dans le dossier usr/local/lib/node_modules/yoltools avec le depot git dedans, en ne faisant que publier lorsque nécessaire, mais on ne pourra pas tester l'install, ce qui peut ne pas être utile.
-2 - déplacer le projet avec depot git dans un autre dossier de travail, et remplacer usr/local/lib/node_modules/yoltools par un alias vers ce dossier. Permet de tester l'install, par contre une fois testé, il faut remettre l'alias à la place pour repointer vers le dossier de travail.
+2 - déplacer le projet avec depot git dans un autre dossier de travail, et remplacer le lien symbolique dans usr/local/bin par un pointant vers ce nouveau dossier. Permet de tester l'install, par contre une fois testé, il faut remettre l'alias à la place pour repointer vers le dossier de travail.
+Pour créer l'alias, aller dans et saisir: sudo ln -s <path to working dir/>bin/yoltools.js yoltools
 
 La structure de dev pour simplifier la maintenance est:
 

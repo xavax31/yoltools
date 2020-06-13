@@ -15,7 +15,12 @@ let yolConfigPathDest = path.normalize("etc/yolconfig.json");
 
 const [,, ...args] = process.argv;  
 
-eval(args[0])();
+if (args.length === 0) {
+    help();
+}
+else {
+    eval(args[0])();
+}
 
 
 function help() {
@@ -176,7 +181,7 @@ function _createFirst() {
 }
 
 
-function _createSecond() {
+async function _createSecond() {
     let json = JSON.parse(fs.readFileSync(yolConfigPathDest));
 
     myLibrary.callBash("cordova", ["create", cwd, json.appID, json.appName]);
@@ -190,10 +195,17 @@ function _createSecond() {
     addPlugin("cordova-plugin-statusbar@^2.4.2");
     addPlugin("es6-promise-plugin@^4.2.2");
     addPlugin("cordova-plugin-device");
-    addPlugin("cordova-plugin-wkwebview-engine");
     addPlugin("cordova-plugin-inappbrowser");
 
     copyTemplateWWW();
+
+    let configObj = await getConfigXMLToJSON2();
+
+    // wkwebview
+    addPlugin("cordova-plugin-wkwebview-engine");
+    setPreference({configObj, platform: "ios", name: "WKWebViewOnly", value: "true"})
+    setPreference({configObj, platform: "ios", name: "CordovaWebViewEngine", value: "CDVWKWebViewEngine"})
+    setFeature({platform: "ios", configObj, name: "CDVWKWebViewEngine", paramName: "ios-package", paramValue: "CDVWKWebViewEngine"}) 
 
     if (json.features.notifications.active) {
         copyFile("sources/notifications/google-services.json", cwd+"/google-services.json");
@@ -210,57 +222,47 @@ function _createSecond() {
     if (json.features.camera.active) {
         addPlugin("cordova-plugin-camera@^4.0.3");
         addPlugin("cordova-plugin-camera-preview@^0.10.0");
+        setEditConfigIOS({configObj, name: "NSCameraUsageDescription", value: json.features.camera.text})
     }
 
     if (json.features.geolocalisation.active) {
         addPlugin("cordova-plugin-geolocation");
+        setEditConfigIOS({configObj, name: "NSLocationWhenInUseUsageDescription", value: json.features.geolocalisation.text});
+        setEditConfigIOS({configObj, name: "NSLocationAlwaysUsageDescription", value: json.features.geolocalisation.text});
     }
 
+    if (json.features.photos.active) {
+        setEditConfigIOS({configObj, name: "NSPhotoLibraryUsageDescription", value: json.features.photos.text});
+        setEditConfigIOS({configObj, name: "NSPhotoLibraryAddUsageDescription", value: json.features.photos.text});
+    }
+    
     createKeystoreAndroid();
 
 
     // Adapt config.xml
-    getConfigXMLToJSON(configJSON=>{
+    // getConfigXMLToJSON(configJSON=>{
 
-        createIconAndSplash({configObj: configJSON});
+        createIconAndSplash({configObj});
 
         for (let i = 0; i < json.allowIntentURLs.length; i++) {
-            setAllowIntent({configObj: configJSON, href:json.allowIntentURLs[i]})
+            setAllowIntent({configObj, href:json.allowIntentURLs[i]})
         }
 
         for (let i = 0; i < json.allowNavigationURLs.length; i++) {
-            setAllowNavigation({configObj: configJSON, href:json.allowNavigationURLs[i]})
+            setAllowNavigation({configObj, href:json.allowNavigationURLs[i]})
         }
 
-        setPreference({configObj: configJSON, platform: "android", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur android"})
+        // user agent
+        setPreference({configObj, platform: "android", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur android"})
+        setPreference({configObj, platform: "ios", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur ios"})
 
-        setEditConfigApplicationAttributeAndroid({configObj: configJSON, name: "usesCleartextTraffic", value: true});
+        // android specific
+        setEditConfigApplicationAttributeAndroid({configObj, name: "usesCleartextTraffic", value: true});
 
-        setPreference({configObj: configJSON, platform: "ios", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur ios"})
+        // ios specific
+        setPreference({configObj, platform: "ios", name: "DisallowOverscroll", value: "false"})
 
-        setPreference({configObj: configJSON, platform: "ios", name: "DisallowOverscroll", value: "false"})
-
-        if (json.features.contacts.active) {
-            setEditConfigIOS({configObj: configJSON, name: "NSContactsUsageDescription", value: json.features.contacts.text})
-        }
-        if (json.features.camera.active) {
-            setEditConfigIOS({configObj: configJSON, name: "NSCameraUsageDescription", value: json.features.camera.text})
-        }
-        if (json.features.photos.active) {
-            setEditConfigIOS({configObj: configJSON, name: "NSPhotoLibraryUsageDescription", value: json.features.photos.text});
-            setEditConfigIOS({configObj: configJSON, name: "NSPhotoLibraryAddUsageDescription", value: json.features.photos.text});
-        }
-        if (json.features.geolocalisation.active) {
-            setEditConfigIOS({configObj: configJSON, name: "NSLocationWhenInUseUsageDescription", value: json.features.geolocalisation.text});
-            setEditConfigIOS({configObj: configJSON, name: "NSLocationAlwaysUsageDescription", value: json.features.geolocalisation.text});
-        }
-
-        setPreference({configObj: configJSON, platform: "ios", name: "WKWebViewOnly", value: "true"})
-        setPreference({configObj: configJSON, platform: "ios", name: "CordovaWebViewEngine", value: "CDVWKWebViewEngine"})
-
-        setFeature({platform: "ios", configObj: configJSON, name: "CDVWKWebViewEngine", paramName: "ios-package", paramValue: "CDVWKWebViewEngine"}) 
-
-        saveConfigJSONToXML(configJSON)
+        saveConfigJSONToXML(configObj)
 
         createAllGits();
 
@@ -279,7 +281,7 @@ function _createSecond() {
 
         Now you can compile android & ios projects
         `)
-    });
+    // });
 
 }
 
@@ -651,4 +653,68 @@ function promptUseSample() {
     prompt.get(schema, function (err, result) {
         console.log('Command-line input received:', result);     // Log the results.
     });
+}
+
+
+async function buildIOS() {
+    let json = JSON.parse(fs.readFileSync(yolConfigPathDest));
+
+    await incVersion();
+
+    if (json.features.notifications.active) {
+        copyFile("sources/notifications/GoogleService-Info.plist", cwd+"/GoogleService-Info.plist");
+    }
+
+    myLibrary.callBashLine("cordova build ios --buildFlag='-UseModernBuildSystem=0'", {cwd});
+    myLibrary.callBashLine(`open -a xcode platforms/ios/${json.appName}.xcworkspace`, {cwd});
+}
+
+
+ async function incVersion() {
+    let configObj = await getConfigXMLToJSON2();
+
+    return new Promise(resolve=>{
+
+        let currentVersion = configObj.widget["$"].version;
+    
+        var schema = {
+            properties: {
+              version: {
+                description: `Version number (current: ${currentVersion}) type same, major, minor or patch`,
+                pattern: /^(same|major|minor|patch)$/,
+                message: 'type same, major, minor or patch',
+                required: true
+              }
+            }
+        };
+
+        prompt.start();
+
+        prompt.get(schema, function (err, result) {
+            // console.log('Command-line input received:', result);
+            let matches = currentVersion.match(/^([0-9]+)\.([0-9]+)\.([0-9]+)$/);
+            
+            switch (result.version) {
+                case "major":
+                    matches[1] = Number(matches[1]) + 1; 
+                    break;
+                case "minor":
+                    matches[2] = Number(matches[2]) + 1; 
+                    break;
+                case "patch":
+                    matches[3] = Number(matches[3]) + 1; 
+                    break;
+            
+                default:
+                    break;
+            }
+    
+            let newVersion = `${matches[1]}.${matches[2]}.${matches[3]}`;
+            console.log(newVersion);
+            configObj.widget["$"].version = newVersion;
+    
+            saveConfigJSONToXML(configObj)
+            resolve();
+        });
+    })
 }
