@@ -41,5 +41,7 @@
             "active": true,
             "text": "need access to localization"
         }
-    }
+    },
+    "lastInstallStep": -1
+
 }

@@ -1,6 +1,6 @@
 {
   "name": "yoltools",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "generic tool",
   "main": "index.js",
   "directories": {

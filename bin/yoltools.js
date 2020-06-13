@@ -124,104 +124,162 @@ function _createFirst() {
 
 
 async function _createSecond() {
+
+    
+    let steps = [];
+
     let json = JSON.parse(fs.readFileSync(yolConfigPathDest));
+ 
+    steps.push(()=>myLibrary.callBash("cordova", ["create", cwd, json.appID, json.appName]));
 
-    myLibrary.callBash("cordova", ["create", cwd, json.appID, json.appName]);
 
-    addPlatform("android@" + json.android.version);
-    addPlatform("ios@" + json.ios.version);
+    steps.push(()=>addPlatform("android@" + json.android.version));
+    steps.push(()=>addPlatform("ios@" + json.ios.version));
 
-    addPlugin("cordova-plugin-android-permissions@^1.0.0");
-    addPlugin("cordova-plugin-screen-orientation@^3.0.1");
-    addPlugin("cordova-plugin-splashscreen@^5.0.2");
-    addPlugin("cordova-plugin-statusbar@^2.4.2");
-    addPlugin("es6-promise-plugin@^4.2.2");
-    addPlugin("cordova-plugin-device");
-    addPlugin("cordova-plugin-inappbrowser");
+    steps.push(()=>addPlugin("cordova-plugin-android-permissions@^1.0.0"));
+    steps.push(()=>addPlugin("cordova-plugin-screen-orientation@^3.0.1"));
+    steps.push(()=>addPlugin("cordova-plugin-splashscreen@^5.0.2"));
+    steps.push(()=>addPlugin("cordova-plugin-statusbar@^2.4.2"));
+    steps.push(()=>addPlugin("es6-promise-plugin@^4.2.2"));
+    steps.push(()=>addPlugin("cordova-plugin-device"));
+    steps.push(()=>addPlugin("cordova-plugin-inappbrowser"));
 
-    copyTemplateWWW();
+    steps.push(()=>copyTemplateWWW());
 
-    let configObj = await getConfigXMLToJSON();
+    let configObj;
+    
+    steps.push(async ()=>{
+        configObj=await getConfigXMLToJSON();
+        console.log(configObj);
+        
+    });
 
     // wkwebview
-    addPlugin("cordova-plugin-wkwebview-engine");
-    setPreference({configObj, platform: "ios", name: "WKWebViewOnly", value: "true"})
-    setPreference({configObj, platform: "ios", name: "CordovaWebViewEngine", value: "CDVWKWebViewEngine"})
-    setFeature({platform: "ios", configObj, name: "CDVWKWebViewEngine", paramName: "ios-package", paramValue: "CDVWKWebViewEngine"}) 
+    steps.push(()=>addPlugin("cordova-plugin-wkwebview-engine"));
+    steps.push(()=>setPreference({platform: "ios", name: "WKWebViewOnly", value: "true"}));
+    steps.push(()=>setPreference({platform: "ios", name: "CordovaWebViewEngine", value: "CDVWKWebViewEngine"}));
+    steps.push(()=>setFeature({platform: "ios", name: "CDVWKWebViewEngine", paramName: "ios-package", paramValue: "CDVWKWebViewEngine"}));
 
-    if (json.features.notifications.active) {
-        copyFile("sources/notifications/google-services.json", cwd+"/google-services.json");
-        copyFile("sources/notifications/google-services.json", cwd+"/platforms/android/app/google-services.json");
-        copyFile("sources/notifications/GoogleService-Info.plist", cwd+"/GoogleService-Info.plist");
-
-        addPlugin("cordova-plugin-fcm");
-        addPlugin("cordova-android-support-gradle-release@^3.0.0");
-        addPlugin("cordova-android-firebase-gradle-release@^3.0.0");
-
-        copyFile(__dirname + "/assets/fcm_config_files_process.js", cwd+"/plugins/cordova-plugin-fcm/scripts/fcm_config_files_process.js");
-    }
-
-    if (json.features.camera.active) {
-        addPlugin("cordova-plugin-camera@^4.0.3");
-        addPlugin("cordova-plugin-camera-preview@^0.10.0");
-        setEditConfigIOS({configObj, name: "NSCameraUsageDescription", value: json.features.camera.text})
-    }
-
-    if (json.features.geolocalisation.active) {
-        addPlugin("cordova-plugin-geolocation");
-        setEditConfigIOS({configObj, name: "NSLocationWhenInUseUsageDescription", value: json.features.geolocalisation.text});
-        setEditConfigIOS({configObj, name: "NSLocationAlwaysUsageDescription", value: json.features.geolocalisation.text});
-    }
-
-    if (json.features.photos.active) {
-        setEditConfigIOS({configObj, name: "NSPhotoLibraryUsageDescription", value: json.features.photos.text});
-        setEditConfigIOS({configObj, name: "NSPhotoLibraryAddUsageDescription", value: json.features.photos.text});
-    }
+    steps.push(()=>{
+        if (json.features.notifications.active) {
+            copyFile("sources/notifications/google-services.json", cwd+"/google-services.json");
+            copyFile("sources/notifications/google-services.json", cwd+"/platforms/android/app/google-services.json");
+            copyFile("sources/notifications/GoogleService-Info.plist", cwd+"/GoogleService-Info.plist");
     
-    createKeystoreAndroid();
+            addPlugin("cordova-plugin-fcm");
+            addPlugin("cordova-android-support-gradle-release@^3.0.0");
+            addPlugin("cordova-android-firebase-gradle-release@^3.0.0");
+    
+            copyFile(__dirname + "/assets/fcm_config_files_process.js", cwd+"/plugins/cordova-plugin-fcm/scripts/fcm_config_files_process.js");
+        }
+    })
 
-    createIconAndSplash({configObj});
 
-    for (let i = 0; i < json.allowIntentURLs.length; i++) {
-        setAllowIntent({configObj, href:json.allowIntentURLs[i]})
+    steps.push(()=>{
+        if (json.features.camera.active) {
+            addPlugin("cordova-plugin-camera@^4.0.3");
+            addPlugin("cordova-plugin-camera-preview@^0.10.0");
+            setEditConfigIOS({name: "NSCameraUsageDescription", value: json.features.camera.text})
+        }
+    })
+
+    steps.push(()=>{
+        if (json.features.geolocalisation.active) {
+            addPlugin("cordova-plugin-geolocation");
+            setEditConfigIOS({name: "NSLocationWhenInUseUsageDescription", value: json.features.geolocalisation.text});
+            setEditConfigIOS({name: "NSLocationAlwaysUsageDescription", value: json.features.geolocalisation.text});
+        }
+    })
+
+
+    steps.push(()=>{
+        if (json.features.photos.active) {
+            setEditConfigIOS({name: "NSPhotoLibraryUsageDescription", value: json.features.photos.text});
+            setEditConfigIOS({name: "NSPhotoLibraryAddUsageDescription", value: json.features.photos.text});
+        }
+    })
+
+    
+    steps.push(()=>createKeystoreAndroid());
+
+    steps.push(()=>createIconAndSplash());
+
+    steps.push(()=>{
+        for (let i = 0; i < json.allowIntentURLs.length; i++) {
+            setAllowIntent({href:json.allowIntentURLs[i]})
+        }
+    
+        for (let i = 0; i < json.allowNavigationURLs.length; i++) {
+            setAllowNavigation({href:json.allowNavigationURLs[i]})
+        }
+    })
+
+
+    steps.push(()=>{
+        // user agent
+        setPreference({platform: "android", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur android"})
+        setPreference({platform: "ios", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur ios"})
+    });
+
+    steps.push(()=>{
+        // android specific
+        setEditConfigApplicationAttributeAndroid({name: "usesCleartextTraffic", value: true});
+
+        // ios specific
+        setPreference({platform: "ios", name: "DisallowOverscroll", value: "false"})
+    });
+
+    steps.push(()=>saveConfigJSONToXML(configObj));
+
+    steps.push(()=>createAllGits());
+
+    steps.push(()=>addScriptsToPackageJSON());
+
+    steps.push(()=>{
+        console.log("FINISHED");
+        console.log(`
+        Now you must create the gitlab repository '${getStringLowerCaseWithoutAcentsOrSymbols(json.appName)}' (https://gitlab.com/xavier.boisnon/${getStringLowerCaseWithoutAcentsOrSymbols(json.appName)}-mobile.git). Go to https://gitlab.com.
+        Then add remote via terminal in ${cwd} directory:
+        git remote add origin https://gitlab.com/xavier.boisnon/${getStringLowerCaseWithoutAcentsOrSymbols(json.appName)}-mobile.git
+        
+        Then open SourceTree and create a new Repository group named ${json.appName}
+        Then drag in the main folder of the project and the sub-folder ${cwd}
+        
+        Open the ${cwd} project in Sourcetree and push master
+    
+        That's all for project installation.
+    
+        Now you can compile android & ios projects
+        `)
+    });
+
+    runSteps(steps);
+}
+
+
+async function runSteps(steps, index=-1) {
+    if (index == -1) {
+        let json = JSON.parse(fs.readFileSync(yolConfigPathDest));
+        if (json.lastInstallStep != undefined) index = Number(json.lastInstallStep);
     }
 
-    for (let i = 0; i < json.allowNavigationURLs.length; i++) {
-        setAllowNavigation({configObj, href:json.allowNavigationURLs[i]})
+    index ++;
+    if (index < steps.length -1) {
+        console.log("execute step ", index);
+
+        try {
+            await steps[index]();
+            runSteps(steps, index);
+        } catch (error) {
+            let json = JSON.parse(fs.readFileSync(yolConfigPathDest));
+            json.lastInstallStep = index - 1;
+            fs.writeFileSync(yolConfigPathDest, JSON.stringify(json, null, 4));
+        }
     }
-
-    // user agent
-    setPreference({configObj, platform: "android", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur android"})
-    setPreference({configObj, platform: "ios", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur ios"})
-
-    // android specific
-    setEditConfigApplicationAttributeAndroid({configObj, name: "usesCleartextTraffic", value: true});
-
-    // ios specific
-    setPreference({configObj, platform: "ios", name: "DisallowOverscroll", value: "false"})
-
-    saveConfigJSONToXML(configObj)
-
-    createAllGits();
-
-    addScriptsToPackageJSON();
-
-    console.log("FINISHED");
-    console.log(`
-    Now you must create the gitlab repository '${getStringLowerCaseWithoutAcentsOrSymbols(json.appName)}' (https://gitlab.com/xavier.boisnon/${getStringLowerCaseWithoutAcentsOrSymbols(json.appName)}-mobile.git). Go to https://gitlab.com.
-    Then add remote via terminal in ${cwd} directory:
-    git remote add origin https://gitlab.com/xavier.boisnon/${getStringLowerCaseWithoutAcentsOrSymbols(json.appName)}-mobile.git
-    
-    Then open SourceTree and create a new Repository group named ${json.appName}
-    Then drag in the main folder of the project and the sub-folder ${cwd}
-    
-    Open the ${cwd} project in Sourcetree and push master
-
-    That's all for project installation.
-
-    Now you can compile android & ios projects
-    `)
-
+    else {
+        console.log("finished");
+        
+    }
 }
 
 
@@ -266,7 +324,7 @@ function copyTemplateWWW() {
 }
 
 
-function createIconAndSplash({configObj}) {
+function createIconAndSplash() {
     myLibrary.callBash("cp", ["sources/assets/icon.png", path.normalize(cwd+"/icon.png")]);
     myLibrary.callBash("cp", ["sources/assets/splash.png", path.normalize(cwd+"/splash.png")]);
     myLibrary.callBash("cordova-icon", [], {cwd});
@@ -275,12 +333,12 @@ function createIconAndSplash({configObj}) {
 
     // now needed for android
     copyDir(cwd + "/platforms/android/app/src/main/res", cwd + "/res");
-    setIcon({configObj, platform:"android", src: "res/mipmap-ldpi/icon.png", density:"ldpi"})
-    setIcon({configObj, platform:"android", src: "res/mipmap-mdpi/icon.png", density:"mdpi"})
-    setIcon({configObj, platform:"android", src: "res/mipmap-hdpi/icon.png", density:"hdpi"})
-    setIcon({configObj, platform:"android", src: "res/mipmap-xhdpi/icon.png", density:"xhdpi"})
-    setIcon({configObj, platform:"android", src: "res/mipmap-xxhdpi/icon.png", density:"xxhdpi"})
-    setIcon({configObj, platform:"android", src: "res/mipmap-xxxhdpi/icon.png", density:"xxxhdpi"})
+    setIcon({platform:"android", src: "res/mipmap-ldpi/icon.png", density:"ldpi"})
+    setIcon({platform:"android", src: "res/mipmap-mdpi/icon.png", density:"mdpi"})
+    setIcon({platform:"android", src: "res/mipmap-hdpi/icon.png", density:"hdpi"})
+    setIcon({platform:"android", src: "res/mipmap-xhdpi/icon.png", density:"xhdpi"})
+    setIcon({platform:"android", src: "res/mipmap-xxhdpi/icon.png", density:"xxhdpi"})
+    setIcon({platform:"android", src: "res/mipmap-xxxhdpi/icon.png", density:"xxxhdpi"})
 }
 
 
@@ -329,7 +387,8 @@ function createKeystoreAndroid(json=null) {
 }
 
 
-function setAllowIntent({configObj, href}) {
+async function setAllowIntent({href}) {
+    let configObj = await getConfigXMLToJSON();
     let configArr = configObj.widget['allow-intent'] = configObj.widget['allow-intent'] || [];
     let paramObj = null;
 
@@ -349,10 +408,12 @@ function setAllowIntent({configObj, href}) {
     else {
         paramObj["$"].href = href;
     }
+    saveConfigJSONToXML(configObj);
 }
 
 
-function setAllowNavigation({configObj, href}) {
+async function setAllowNavigation({href}) {
+    let configObj = await getConfigXMLToJSON();
     let configArr = configObj.widget['allow-navigation'] = configObj.widget['allow-navigation'] || [];
     let paramObj = null;
 
@@ -372,10 +433,12 @@ function setAllowNavigation({configObj, href}) {
     else {
         paramObj["$"].href = href;
     }
+    saveConfigJSONToXML(configObj);
 }
 
 
-function setPreference({configObj, platform, name, value}) {
+async function setPreference({platform, name, value}) {
+    let configObj = await getConfigXMLToJSON();
     let platformObj = getPlatformObj(platform, configObj);
     platformObj.preference = platformObj.preference || [];
     let preferenceObj = null;
@@ -396,10 +459,13 @@ function setPreference({configObj, platform, name, value}) {
     else {
         preferenceObj["$"].value = value;
     }
+
+    saveConfigJSONToXML(configObj);
 }
 
 
-function setIcon({configObj, platform, src, density}) {
+async function setIcon({platform, src, density}) {
+    let configObj = await getConfigXMLToJSON();
     let platformObj = getPlatformObj(platform, configObj);
     platformObj.icon = platformObj.icon || [];
     let iconObj = null;
@@ -420,10 +486,12 @@ function setIcon({configObj, platform, src, density}) {
     else {
         iconObj["$"].density = density;
     }
+    saveConfigJSONToXML(configObj);
 }
 
 
-function setEditConfigIOS({configObj, name, value, mode="merge"}) {
+async function setEditConfigIOS({name, value, mode="merge"}) {
+    let configObj = await getConfigXMLToJSON();
     let platformObj = getPlatformObj("ios", configObj);
     let configArr = platformObj["edit-config"] = platformObj["edit-config"] || [];
     
@@ -448,10 +516,12 @@ function setEditConfigIOS({configObj, name, value, mode="merge"}) {
     else {
         paramObj["string"] = value;
     }
+    saveConfigJSONToXML(configObj);
 }
 
 
-function setEditConfigApplicationAttributeAndroid({configObj, name, value}) {
+async function setEditConfigApplicationAttributeAndroid({name, value}) {
+    let configObj = await getConfigXMLToJSON();
     let platformObj = getPlatformObj("android", configObj);
     let configArr = platformObj["edit-config"] = platformObj["edit-config"] || [];
 
@@ -482,10 +552,12 @@ function setEditConfigApplicationAttributeAndroid({configObj, name, value}) {
     }
 
     existingElement["application"][0]["$"][`android:${name}`] =  `${value}`;
+    saveConfigJSONToXML(configObj);
 }
 
 
-function setFeature({platform, configObj, name, paramName, paramValue}) {
+async function setFeature({platform, name, paramName, paramValue}) {
+    let configObj = await getConfigXMLToJSON();
     let platformObj = getPlatformObj(platform, configObj);
     let configArr = platformObj["feature"] = platformObj["feature"] || [];
     
@@ -511,6 +583,7 @@ function setFeature({platform, configObj, name, paramName, paramValue}) {
             "$": {name:paramName, value: paramValue}
         };
     }
+    saveConfigJSONToXML(configObj);
 }
 
 
