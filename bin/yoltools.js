@@ -12,6 +12,7 @@ var passwordGenerator = require('generate-password');
 let cwd = "app-mobile";
 let yolConfigPathSource = path.normalize(__dirname + "/assets/yolconfig.json");
 let yolConfigPathDest = path.normalize("etc/yolconfig.json");
+let mainPackageJSON = path.normalize("package.json");
 
 const [,, ...args] = process.argv;  
 
@@ -93,61 +94,7 @@ async function testPromise(value) {
 
 
 
-   function getConfigXMLToJSON2() {
-       return new Promise((resolve, reject)=>{
-            var parser = new xml2js.Parser();
 
-            fs.readFile('app-mobile/config.xml', function(err, data) {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    parser.parseString(data, function (err, result) {
-                        if (err) {
-                            reject(err);
-                        }
-                        else {
-                            resolve(result);
-                        }
-                    });
-                }
-
-            });
-        })
-
-    }
-
-async function test() {
-    try {
-        let json = await getConfigXMLToJSON2();
-        console.log(json);
-        await resolveAfter2Seconds(true);
-    } catch (error) {
-        console.log(error);
-    }
-
-
-    
-
-    return
-    await resolveAfter2Seconds(true);
-    await resolveAfter2Seconds(false);
-    await resolveAfter2Seconds(true);
-
-
-    return;
-    fonctionAsynchroneOk().then(result=>console.log(result)).catch(err => console.log(err.message))
-
-// fonctionAsynchroneKo().catch(err => console.log(err.message))
-    return
-    // asyncCall();
-    // asyncCall();
-    // asyncCall();
-    resolveAfter2Seconds()
-    .then(()=>rejectAfter2Seconds())
-    .then(()=>resolveAfter2Seconds())
-    .catch(()=>console.log("error"));
-}
 
 
 function create() {
@@ -199,7 +146,7 @@ async function _createSecond() {
 
     copyTemplateWWW();
 
-    let configObj = await getConfigXMLToJSON2();
+    let configObj = await getConfigXMLToJSON();
 
     // wkwebview
     addPlugin("cordova-plugin-wkwebview-engine");
@@ -238,52 +185,74 @@ async function _createSecond() {
     
     createKeystoreAndroid();
 
+    createIconAndSplash({configObj});
 
-    // Adapt config.xml
-    // getConfigXMLToJSON(configJSON=>{
+    for (let i = 0; i < json.allowIntentURLs.length; i++) {
+        setAllowIntent({configObj, href:json.allowIntentURLs[i]})
+    }
 
-        createIconAndSplash({configObj});
+    for (let i = 0; i < json.allowNavigationURLs.length; i++) {
+        setAllowNavigation({configObj, href:json.allowNavigationURLs[i]})
+    }
 
-        for (let i = 0; i < json.allowIntentURLs.length; i++) {
-            setAllowIntent({configObj, href:json.allowIntentURLs[i]})
-        }
+    // user agent
+    setPreference({configObj, platform: "android", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur android"})
+    setPreference({configObj, platform: "ios", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur ios"})
 
-        for (let i = 0; i < json.allowNavigationURLs.length; i++) {
-            setAllowNavigation({configObj, href:json.allowNavigationURLs[i]})
-        }
+    // android specific
+    setEditConfigApplicationAttributeAndroid({configObj, name: "usesCleartextTraffic", value: true});
 
-        // user agent
-        setPreference({configObj, platform: "android", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur android"})
-        setPreference({configObj, platform: "ios", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur ios"})
+    // ios specific
+    setPreference({configObj, platform: "ios", name: "DisallowOverscroll", value: "false"})
 
-        // android specific
-        setEditConfigApplicationAttributeAndroid({configObj, name: "usesCleartextTraffic", value: true});
+    saveConfigJSONToXML(configObj)
 
-        // ios specific
-        setPreference({configObj, platform: "ios", name: "DisallowOverscroll", value: "false"})
+    createAllGits();
 
-        saveConfigJSONToXML(configObj)
+    addScriptsToPackageJSON();
 
-        createAllGits();
+    console.log("FINISHED");
+    console.log(`
+    Now you must create the gitlab repository '${getStringLowerCaseWithoutAcentsOrSymbols(json.appName)}' (https://gitlab.com/xavier.boisnon/${getStringLowerCaseWithoutAcentsOrSymbols(json.appName)}-mobile.git). Go to https://gitlab.com.
+    Then add remote via terminal in ${cwd} directory:
+    git remote add origin https://gitlab.com/xavier.boisnon/${getStringLowerCaseWithoutAcentsOrSymbols(json.appName)}-mobile.git
+    
+    Then open SourceTree and create a new Repository group named ${json.appName}
+    Then drag in the main folder of the project and the sub-folder ${cwd}
+    
+    Open the ${cwd} project in Sourcetree and push master
 
-        console.log("FINISHED");
-        console.log(`
-        Now you must create the gitlab repository '${getStringLowerCaseWithoutAcentsOrSymbols(json.appName)}' (https://gitlab.com/xavier.boisnon/${getStringLowerCaseWithoutAcentsOrSymbols(json.appName)}-mobile.git). Go to https://gitlab.com.
-        Then add remote via terminal in ${cwd} directory:
-        git remote add origin https://gitlab.com/xavier.boisnon/${getStringLowerCaseWithoutAcentsOrSymbols(json.appName)}-mobile.git
-        
-        Then open SourceTree and create a new Repository group named ${json.appName}
-        Then drag in the main folder of the project and the sub-folder ${cwd}
-        
-        Open the ${cwd} project in Sourcetree and push master
+    That's all for project installation.
 
-        That's all for project installation.
-
-        Now you can compile android & ios projects
-        `)
-    // });
+    Now you can compile android & ios projects
+    `)
 
 }
+
+
+function getConfigXMLToJSON() {
+    return new Promise((resolve, reject)=>{
+        var parser = new xml2js.Parser();
+
+        fs.readFile('app-mobile/config.xml', function(err, data) {
+            if (err) {
+                reject(err);
+            }
+            else {
+                parser.parseString(data, function (err, result) {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(result);
+                    }
+                });
+            }
+
+        });
+    })
+
+ }
 
 
 function addPlatform(platformID) {
@@ -581,6 +550,19 @@ function createGit({directory="./"}={}) {
 }
 
 
+function addScriptsToPackageJSON() {
+    let json = JSON.parse(fs.readFileSync(mainPackageJSON));
+    json.scripts = {
+        IOS_Build: "yoltools IOS_Build",
+        ANDROID_Build_DEBUG: "yoltools ANDROID_Build_DEBUG",
+        ANDROID_Build_RELEASE: "yoltools ANDROID_Build_RELEASE",
+        makePluginsPackagesForSite: "yoltools makePluginsPackagesForSite"
+    }
+
+    fs.writeFileSync(mainPackageJSON, JSON.stringify(json, null, 4));
+}
+
+
 function getConfigXMLToJSON(callback) {
     var parser = new xml2js.Parser();
 
@@ -656,7 +638,7 @@ function promptUseSample() {
 }
 
 
-async function buildIOS() {
+async function IOS_Build() {
     let json = JSON.parse(fs.readFileSync(yolConfigPathDest));
 
     await incVersion();
@@ -670,8 +652,44 @@ async function buildIOS() {
 }
 
 
- async function incVersion() {
-    let configObj = await getConfigXMLToJSON2();
+async function ANDROID_Build_DEBUG() {
+    let json = JSON.parse(fs.readFileSync(yolConfigPathDest));
+
+    let version = await incVersion();
+
+    if (json.features.notifications.active) {
+        copyFile("sources/notifications/google-services.json", cwd+"/google-services.json");
+        copyFile("sources/notifications/google-services.json", cwd+"/platforms/android/app/google-services.json");
+    }
+
+    myLibrary.callBashLine("cordova build android", {cwd});
+
+    myLibrary.makeDir("out");
+    copyFile(cwd + "/platforms/android/app/build/outputs/apk/debug/app-debug.apk", `out/${json.appName}-debug-${version}.apk`);
+    myLibrary.callBashLine("open out");
+}
+
+
+async function ANDROID_Build_RELEASE() {
+    let json = JSON.parse(fs.readFileSync(yolConfigPathDest));
+
+    let version = await incVersion();
+
+    if (json.features.notifications.active) {
+        copyFile("sources/notifications/google-services.json", cwd+"/google-services.json");
+        copyFile("sources/notifications/google-services.json", cwd+"/platforms/android/app/google-services.json");
+    }
+
+    myLibrary.callBashLine("cordova build android --release --buildConfig", {cwd});
+
+    myLibrary.makeDir("out");
+    copyFile(cwd + "/platforms/android/app/build/outputs/apk/release/app-release.apk", `out/${json.appName}-release-${version}.apk`);
+    myLibrary.callBashLine("open out");
+}
+
+
+async function incVersion() {
+    let configObj = await getConfigXMLToJSON();
 
     return new Promise(resolve=>{
 
@@ -714,7 +732,21 @@ async function buildIOS() {
             configObj.widget["$"].version = newVersion;
     
             saveConfigJSONToXML(configObj)
-            resolve();
+            resolve(newVersion);
         });
     })
+}
+
+
+function makePluginsPackagesForSite() {
+    myLibrary.makeDir("out/cordova");
+    
+    myLibrary.callBashLine("rm -r ./out/cordova");
+    copyDir(cwd + "/platforms/android/platform_www", "out/cordova/android");
+    copyDir(cwd + "/platforms/ios/platform_www", "out/cordova/ios");
+
+    myLibrary.callBashLine('zip -vr cordova.zip cordova/ -x "*.DS_Store"',  {cwd: "out"});
+
+    myLibrary.callBashLine("rm -r ./out/cordova");
+
 }
