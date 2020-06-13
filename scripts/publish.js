@@ -25,7 +25,7 @@ prompt.get(schema, function (err, result) {
 
     execSync("git add .", {stdio:[0, 1, 2]});
     execSync("npm version  " + result.version + "  -m '" + result.commitMessage + "' --force", {stdio:[0, 1, 2]});
-    execSync("git push --tags", {stdio:[0, 1, 2]});
+    execSync("git push --follow-tags", {stdio:[0, 1, 2]});
     execSync("npm publish", {stdio:[0, 1, 2]});
 });
 //test 3
