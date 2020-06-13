@@ -1,0 +1,73 @@
+{
+    "formatJSON": "SimpleJSON2",
+    "projectData": [
+        {
+            "id": "Informations",
+            "type": "DataObject",
+            "children": [
+                {
+                    "id": "project",
+                    "type": "ProjectInformation",
+                    "description": "Configuration globale du projet",
+                    "value": {
+                        "permanentLock": false,
+                        "id": "yoltools",
+                        "title": "",
+                        "type": "ApplicationMinimal",
+                        "description": "Modèle minimal sans structure ni technologie définies.",
+                        "version": "1.0",
+                        "appCodeVersion": "intern: src v1.0",
+                        "gitRepository": "",
+                        "previewIndex": "",
+                        "status": "new",
+                        "dateValidation": "",
+                        "dateGabarit": "",
+                        "devNumDaysCode": 0,
+                        "dateBeta": "",
+                        "devNumDaysDebug": 0,
+                        "dateRelease": "",
+                        "datePublication": "",
+                        "devNumDaysCleanup": 0,
+                        "publication": "all",
+                        "assignedUsers": "all",
+                        "Langues": "fr",
+                        "Doc": "<a href='url.com' target='_blank' >Doc Moteur</a> ",
+                        "BugReport": "<a href='url.com' target='_blank' >Bug Report link</a>"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "Resources",
+            "type": "Group",
+            "visible": "admin,dev",
+            "children": []
+        },
+        {
+            "id": "Scenario",
+            "type": "Group",
+            "children": [
+                {
+                    "id": "ScenarioFile",
+                    "type": "FileItem",
+                    "description": "scenario",
+                    "asset": {
+                        "type": "PDF",
+                        "src": "doc/SCENARIO.pdf"
+                    },
+                    "visible": true,
+                    "editable": true
+                },
+                {
+                    "id": "Commentaires",
+                    "type": "Text",
+                    "editable": true,
+                    "description": "Décrire ici les modifications souhaitées par rapport au modèle actuel.",
+                    "value": "",
+                    "visible": true,
+                    "timestamp": 1465645299436
+                }
+            ]
+        }
+    ]
+}
