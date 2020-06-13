@@ -32,15 +32,10 @@ function help() {
 }
 
 async function testPromise(value) {
-    setTimeout(() => {
-
-        if (value) {
-            return value;
-        }
-        else {
-            return value;
-        }
-    }, 1000);
+    let configObj = await getConfigXMLToJSON();
+    console.log(configObj)
+        // wkwebview
+        // setPreference({configObj, platform: "ios", name: "WKWebViewOnly", value: "true"})
 }
 
  function resolveAfter2Seconds(value) {
@@ -560,17 +555,6 @@ function addScriptsToPackageJSON() {
     }
 
     fs.writeFileSync(mainPackageJSON, JSON.stringify(json, null, 4));
-}
-
-
-function getConfigXMLToJSON(callback) {
-    var parser = new xml2js.Parser();
-
-    fs.readFile('app-mobile/config.xml', function(err, data) {
-        parser.parseString(data, function (err, result) {
-            callback(result)
-        });
-    });
 }
 
 
