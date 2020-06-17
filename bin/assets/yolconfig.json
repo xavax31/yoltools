@@ -3,8 +3,8 @@
     "appID": "com.cofondateur.myapp",
     "appVersion": "1.0.0",
     "allowNavigationURLs": [
-        "http://myapp.com",
-        "https://myapp.com"
+        "http://*/*",
+        "https://*/*"
     ],
     "allowIntentURLs": [
         "whatsapp:*"
@@ -22,6 +22,10 @@
         "version": "^5.0.0"
     },
     "features": {
+        "appSite": {
+            "active": true,
+            "description": "Create an local site content (dir 'app-site')"
+        },
         "notifications": {
             "active": true
         },

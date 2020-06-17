@@ -2,7 +2,9 @@
 
 'use strict';
 
-var myLibrary = require('../lib/index.js');
+const cordova = require('../lib/cordova.js').CordovaHelper;
+cordova.addPlugin();
+const common = require('../lib/index.js');
 let fs = require('fs-extra');
 var prompt = require('prompt');
 let xml2js = require('xml2js');
@@ -31,65 +33,10 @@ function help() {
     `);
 }
 
-async function testPromise(value) {
-    let configObj = await getConfigXMLToJSON();
-    console.log(configObj)
-        // wkwebview
-        // setPreference({configObj, platform: "ios", name: "WKWebViewOnly", value: "true"})
+
+async function test(value) {
+
 }
-
- function resolveAfter2Seconds(value) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-          if (value) {
-            console.log('resolved')
-
-            resolve(value);
-
-          }
-          else {
-            console.log('reject')
-
-            reject(value);
-
-          }
-      }, 2000);
-    });
-  }
-  
-
-  function rejectAfter2Seconds() {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-          console.log('reject')
-        reject('reject');
-      }, 2000);
-    });
-  }
-  
-  async function asyncCall() {
-    console.log('calling');
-    const result = await resolveAfter2Seconds();
-    console.log(result);
-    // expected output: 'resolved'
-  }
-  
-  async function fonctionAsynchroneOk() {
-    // équivaut à :
-    // return Promise.resolve('résultat');
-    return 'résultat';
-   }
-
-   async function fonctionAsynchroneKo() {
-    // équivaut à :
-    // return Promise.reject(new Error('erreur'));
-    throw new Error('erreur');
-   }
-
-
-
-
-
 
 
 function create() {
@@ -130,7 +77,7 @@ async function _createSecond() {
 
     let json = JSON.parse(fs.readFileSync(yolConfigPathDest));
  
-    steps.push(()=>myLibrary.callBash("cordova", ["create", cwd, json.appID, json.appName]));
+    steps.push(()=>common.callBash("cordova", ["create", cwd, json.appID, json.appName]));
 
 
     steps.push(()=>addPlatform("android@" + json.android.version));
@@ -146,13 +93,9 @@ async function _createSecond() {
 
     steps.push(()=>copyTemplateWWW());
 
-    let configObj;
-    
-    steps.push(async ()=>{
-        configObj=await getConfigXMLToJSON();
-        console.log(configObj);
-        
-    });
+    if (json.features["appSite"].active) {
+        steps.push(()=>createAppSiteDir());
+    }
 
     // wkwebview
     steps.push(()=>addPlugin("cordova-plugin-wkwebview-engine"));
@@ -175,27 +118,27 @@ async function _createSecond() {
     })
 
 
-    steps.push(()=>{
+    steps.push(async ()=>{
         if (json.features.camera.active) {
             addPlugin("cordova-plugin-camera@^4.0.3");
             addPlugin("cordova-plugin-camera-preview@^0.10.0");
-            setEditConfigIOS({name: "NSCameraUsageDescription", value: json.features.camera.text})
+            await setEditConfigIOS({name: "NSCameraUsageDescription", value: json.features.camera.text})
         }
     })
 
-    steps.push(()=>{
+    steps.push(async ()=>{
         if (json.features.geolocalisation.active) {
             addPlugin("cordova-plugin-geolocation");
-            setEditConfigIOS({name: "NSLocationWhenInUseUsageDescription", value: json.features.geolocalisation.text});
-            setEditConfigIOS({name: "NSLocationAlwaysUsageDescription", value: json.features.geolocalisation.text});
+            await setEditConfigIOS({name: "NSLocationWhenInUseUsageDescription", value: json.features.geolocalisation.text});
+            await setEditConfigIOS({name: "NSLocationAlwaysUsageDescription", value: json.features.geolocalisation.text});
         }
     })
 
 
-    steps.push(()=>{
+    steps.push(async ()=>{
         if (json.features.photos.active) {
-            setEditConfigIOS({name: "NSPhotoLibraryUsageDescription", value: json.features.photos.text});
-            setEditConfigIOS({name: "NSPhotoLibraryAddUsageDescription", value: json.features.photos.text});
+            await setEditConfigIOS({name: "NSPhotoLibraryUsageDescription", value: json.features.photos.text});
+            await setEditConfigIOS({name: "NSPhotoLibraryAddUsageDescription", value: json.features.photos.text});
         }
     })
 
@@ -204,36 +147,35 @@ async function _createSecond() {
 
     steps.push(()=>createIconAndSplash());
 
-    steps.push(()=>{
+    steps.push(async ()=>{
         for (let i = 0; i < json.allowIntentURLs.length; i++) {
-            setAllowIntent({href:json.allowIntentURLs[i]})
+            await setAllowIntent({href:json.allowIntentURLs[i]})
         }
     
         for (let i = 0; i < json.allowNavigationURLs.length; i++) {
-            setAllowNavigation({href:json.allowNavigationURLs[i]})
+            await setAllowNavigation({href:json.allowNavigationURLs[i]})
         }
     })
 
 
-    steps.push(()=>{
+    steps.push(async ()=>{
         // user agent
-        setPreference({platform: "android", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur android"})
-        setPreference({platform: "ios", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur ios"})
+        await setPreference({platform: "ios", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur ios"})
+        await setPreference({platform: "android", name: "OverrideUserAgent", value: "Mozilla/5.0 Google Mobile Cofondateur android"})
     });
 
-    steps.push(()=>{
+    steps.push(async ()=>{
         // android specific
-        setEditConfigApplicationAttributeAndroid({name: "usesCleartextTraffic", value: true});
+        await setEditConfigApplicationAttributeAndroid({name: "usesCleartextTraffic", value: true});
 
         // ios specific
-        setPreference({platform: "ios", name: "DisallowOverscroll", value: "false"})
+        await setPreference({platform: "ios", name: "DisallowOverscroll", value: "false"})
     });
 
-    steps.push(()=>saveConfigJSONToXML(configObj));
+    steps.push(()=>addScriptsToPackageJSON());
 
     steps.push(()=>createAllGits());
 
-    steps.push(()=>addScriptsToPackageJSON());
 
     steps.push(()=>{
         console.log("FINISHED");
@@ -309,12 +251,12 @@ function getConfigXMLToJSON() {
 
 
 function addPlatform(platformID) {
-    myLibrary.callBash("cordova", ["platform", "add", platformID], {cwd});
+    common.callBash("cordova", ["platform", "add", platformID], {cwd});
 }
 
 
 function addPlugin(pluginID) {
-    myLibrary.callBash("cordova", ["plugin", "add", pluginID], {cwd});
+    common.callBash("cordova", ["plugin", "add", pluginID], {cwd});
 }
  
 
@@ -324,21 +266,33 @@ function copyTemplateWWW() {
 }
 
 
-function createIconAndSplash() {
-    myLibrary.callBash("cp", ["sources/assets/icon.png", path.normalize(cwd+"/icon.png")]);
-    myLibrary.callBash("cp", ["sources/assets/splash.png", path.normalize(cwd+"/splash.png")]);
-    myLibrary.callBash("cordova-icon", [], {cwd});
-    myLibrary.callBash("cordova-splash", [], {cwd});
+function createAppSiteDir() {
+    fs.copySync(path.normalize(__dirname + "/assets/models/app-site"), path.normalize("app-site"));
+}
+
+
+async function createIconAndSplash() {
+    common.callBash("cp", ["sources/assets/icon.png", path.normalize(cwd+"/icon.png")]);
+    common.callBash("cp", ["sources/assets/splash.png", path.normalize(cwd+"/splash.png")]);
+    common.callBash("cordova-icon", [], {cwd});
+    common.callBash("cordova-splash", [], {cwd});
 
 
     // now needed for android
     copyDir(cwd + "/platforms/android/app/src/main/res", cwd + "/res");
-    setIcon({platform:"android", src: "res/mipmap-ldpi/icon.png", density:"ldpi"})
-    setIcon({platform:"android", src: "res/mipmap-mdpi/icon.png", density:"mdpi"})
-    setIcon({platform:"android", src: "res/mipmap-hdpi/icon.png", density:"hdpi"})
-    setIcon({platform:"android", src: "res/mipmap-xhdpi/icon.png", density:"xhdpi"})
-    setIcon({platform:"android", src: "res/mipmap-xxhdpi/icon.png", density:"xxhdpi"})
-    setIcon({platform:"android", src: "res/mipmap-xxxhdpi/icon.png", density:"xxxhdpi"})
+    console.log("seticonldpi");
+    
+    await setIcon({platform:"android", src: "res/mipmap-ldpi/icon.png", density:"ldpi"})
+    console.log("seticonmdpi");
+    await setIcon({platform:"android", src: "res/mipmap-mdpi/icon.png", density:"mdpi"})
+    console.log("seticonhdpi");
+    await setIcon({platform:"android", src: "res/mipmap-hdpi/icon.png", density:"hdpi"})
+    console.log("seticonxhdpi");
+    await setIcon({platform:"android", src: "res/mipmap-xhdpi/icon.png", density:"xhdpi"})
+    console.log("seticonxxhdpi");
+    await setIcon({platform:"android", src: "res/mipmap-xxhdpi/icon.png", density:"xxhdpi"})
+    console.log("seticonxxxhdpi");
+    await setIcon({platform:"android", src: "res/mipmap-xxxhdpi/icon.png", density:"xxxhdpi"})
 }
 
 
@@ -360,7 +314,7 @@ function createKeystoreAndroid(json=null) {
 
     fs.writeFileSync(yolConfigPathDest, JSON.stringify(json, null, 4));
 
-    myLibrary.execBash(`keytool -genkeypair -keystore ${path.normalize(cwd + "/keys/" + infos.name + ".keystore")} -storepass ${infos.password} -dname "${infos.dname}" -alias ${infos.alias} -keypass ${infos.password} -keyalg RSA -keysize 2048 -validity 20000`, (error, stdout, stderr)=>{
+    common.execBash(`keytool -genkeypair -keystore ${path.normalize(cwd + "/keys/" + infos.name + ".keystore")} -storepass ${infos.password} -dname "${infos.dname}" -alias ${infos.alias} -keypass ${infos.password} -keyalg RSA -keysize 2048 -validity 20000`, (error, stdout, stderr)=>{
         console.log(error, stdout, stderr);
     });
 
@@ -465,6 +419,8 @@ async function setPreference({platform, name, value}) {
 
 
 async function setIcon({platform, src, density}) {
+    console.log("setIcon", src);
+    
     let configObj = await getConfigXMLToJSON();
     let platformObj = getPlatformObj(platform, configObj);
     platformObj.icon = platformObj.icon || [];
@@ -487,6 +443,8 @@ async function setIcon({platform, src, density}) {
         iconObj["$"].density = density;
     }
     saveConfigJSONToXML(configObj);
+    console.log("setIcon end", src);
+
 }
 
 
@@ -611,14 +569,15 @@ function createAllGits() {
 
 
 function createGit({directory="./"}={}) {
-    myLibrary.callBash("npm", ["init", "--yes"], {cwd: directory});
-    myLibrary.callBash("git", ["init"], {cwd: directory});
-    myLibrary.callBash("git", ["add", "*"], {cwd: directory});
-    myLibrary.callBash("git", ["commit", "-m base"], {cwd: directory});
+    common.callBash("git", ["init"], {cwd: directory});
+    common.callBash("git", ["add", "*"], {cwd: directory});
+    common.callBash("git", ["commit", "-m base"], {cwd: directory});
 }
 
 
 function addScriptsToPackageJSON() {
+    common.callBash("npm", ["init", "--yes"], {cwd: "./"});
+
     let json = JSON.parse(fs.readFileSync(mainPackageJSON));
     json.scripts = {
         IOS_Build: "yoltools IOS_Build",
@@ -664,7 +623,7 @@ function getStringLowerCaseWithoutAcentsOrSymbols(str) {
 
 
 function copyFile(source, dest) {
-    myLibrary.callBash("cp", [path.normalize(source), path.normalize(dest)]);
+    common.callBash("cp", [path.normalize(source), path.normalize(dest)]);
 }
 
 
@@ -704,8 +663,8 @@ async function IOS_Build() {
         copyFile("sources/notifications/GoogleService-Info.plist", cwd+"/GoogleService-Info.plist");
     }
 
-    myLibrary.callBashLine("cordova build ios --buildFlag='-UseModernBuildSystem=0'", {cwd});
-    myLibrary.callBashLine(`open -a xcode platforms/ios/${json.appName}.xcworkspace`, {cwd});
+    common.callBashLine("cordova build ios --buildFlag='-UseModernBuildSystem=0'", {cwd});
+    common.callBashLine(`open -a xcode platforms/ios/${json.appName}.xcworkspace`, {cwd});
 }
 
 
@@ -719,11 +678,11 @@ async function ANDROID_Build_DEBUG() {
         copyFile("sources/notifications/google-services.json", cwd+"/platforms/android/app/google-services.json");
     }
 
-    myLibrary.callBashLine("cordova build android", {cwd});
+    common.callBashLine("cordova build android", {cwd});
 
-    myLibrary.makeDir("out");
+    common.makeDir("out");
     copyFile(cwd + "/platforms/android/app/build/outputs/apk/debug/app-debug.apk", `out/${json.appName}-debug-${version}.apk`);
-    myLibrary.callBashLine("open out");
+    common.callBashLine("open out");
 }
 
 
@@ -737,11 +696,11 @@ async function ANDROID_Build_RELEASE() {
         copyFile("sources/notifications/google-services.json", cwd+"/platforms/android/app/google-services.json");
     }
 
-    myLibrary.callBashLine("cordova build android --release --buildConfig", {cwd});
+    common.callBashLine("cordova build android --release --buildConfig", {cwd});
 
-    myLibrary.makeDir("out");
+    common.makeDir("out");
     copyFile(cwd + "/platforms/android/app/build/outputs/apk/release/app-release.apk", `out/${json.appName}-release-${version}.apk`);
-    myLibrary.callBashLine("open out");
+    common.callBashLine("open out");
 }
 
 
@@ -796,14 +755,21 @@ async function incVersion() {
 
 
 function makePluginsPackagesForSite() {
-    myLibrary.makeDir("out/cordova");
+    common.makeDir("out/cordova");
     
-    myLibrary.callBashLine("rm -r ./out/cordova");
+    common.callBashLine("rm -r ./out/cordova");
     copyDir(cwd + "/platforms/android/platform_www", "out/cordova/android");
     copyDir(cwd + "/platforms/ios/platform_www", "out/cordova/ios");
 
-    myLibrary.callBashLine('zip -vr cordova.zip cordova/ -x "*.DS_Store"',  {cwd: "out"});
+    common.callBashLine('zip -vr cordova.zip cordova/ -x "*.DS_Store"',  {cwd: "out"});
 
-    myLibrary.callBashLine("rm -r ./out/cordova");
+    common.callBashLine("rm -r ./out/cordova");
 
+}
+
+function copyPluginsPackagesToAppSiteDir() {    
+    common.makeDir("app-site/cordova");
+    common.callBashLine("rm -r ./app-site/cordova");
+    copyDir(cwd + "/platforms/android/platform_www", "app-site/cordova/android");
+    copyDir(cwd + "/platforms/ios/platform_www", "app-site/cordova/ios");
 }
