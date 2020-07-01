@@ -24,6 +24,7 @@
     "features": {
         "appSite": {
             "active": true,
+            "createRemote": true,
             "description": "Create an local site content (dir 'app-site')"
         },
         "notifications": {

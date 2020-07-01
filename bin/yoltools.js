@@ -2,8 +2,8 @@
 
 'use strict';
 
-const cordova = require('../lib/cordova.js').CordovaHelper;
-cordova.addPlugin();
+// const cordova = require('../lib/cordova.js').CordovaHelper;
+
 const common = require('../lib/index.js');
 let fs = require('fs-extra');
 var prompt = require('prompt');
@@ -70,6 +70,24 @@ function _createFirst() {
 }
 
 
+async function createReactSite() {
+
+    let steps = [];
+    // let json = JSON.parse(fs.readFileSync(yolConfigPathDest));
+
+    let cwd = 'website';
+
+    steps.push(()=>common.callBashLine(`npx create-react-app --template typescript ${cwd}`));
+    steps.push(()=>common.callBashLine(`yarn add bootstrap`, {cwd}));
+    steps.push(()=>common.callBashLine(`yarn add react-router-dom`, {cwd}));
+    steps.push(()=>copyFile(path.normalize(__dirname + "/react/public/index.html"), cwd+"/public/index.html"));
+    steps.push(()=>copyFile(path.normalize(__dirname + "/react/src/App.tsx"), cwd+"/src/App.tsx"));
+    
+    runSteps(steps);
+    
+}
+
+
 async function _createSecond() {
 
     
@@ -93,15 +111,9 @@ async function _createSecond() {
 
     steps.push(()=>copyTemplateWWW());
 
-    if (json.features["appSite"].active) {
-        steps.push(()=>createAppSiteDir());
-    }
-
     // wkwebview
-    steps.push(()=>addPlugin("cordova-plugin-wkwebview-engine"));
-    steps.push(()=>setPreference({platform: "ios", name: "WKWebViewOnly", value: "true"}));
-    steps.push(()=>setPreference({platform: "ios", name: "CordovaWebViewEngine", value: "CDVWKWebViewEngine"}));
-    steps.push(()=>setFeature({platform: "ios", name: "CDVWKWebViewEngine", paramName: "ios-package", paramValue: "CDVWKWebViewEngine"}));
+
+    steps.push(()=>addWKwebView());
 
     steps.push(()=>{
         if (json.features.notifications.active) {
@@ -120,8 +132,8 @@ async function _createSecond() {
 
     steps.push(async ()=>{
         if (json.features.camera.active) {
-            addPlugin("cordova-plugin-camera@^4.0.3");
-            addPlugin("cordova-plugin-camera-preview@^0.10.0");
+            addPlugin("cordova-plugin-camera");
+            addPlugin("cordova-plugin-camera-preview");
             await setEditConfigIOS({name: "NSCameraUsageDescription", value: json.features.camera.text})
         }
     })
@@ -174,6 +186,15 @@ async function _createSecond() {
 
     steps.push(()=>addScriptsToPackageJSON());
 
+
+    if (json.features["appSite"].active) {
+        steps.push(()=>createAppSiteDir());
+        steps.push(()=>copyPluginsPackagesToAppSiteDir());
+        if (json.features["appSite"].createRemote) {
+            steps.push(()=>sendAppSiteToServer());
+        }
+    }
+
     steps.push(()=>createAllGits());
 
 
@@ -206,7 +227,7 @@ async function runSteps(steps, index=-1) {
     }
 
     index ++;
-    if (index < steps.length -1) {
+    if (index < steps.length) {
         console.log("execute step ", index);
 
         try {
@@ -222,6 +243,19 @@ async function runSteps(steps, index=-1) {
         console.log("finished");
         
     }
+}
+
+
+async function addWKwebView() {
+    await addPlugin("cordova-plugin-wkwebview-engine");
+    await setPreference({platform: "ios", name: "WKWebViewOnly", value: "true"});
+    await setPreference({platform: "ios", name: "CordovaWebViewEngine", value: "CDVWKWebViewEngine"});
+    await setFeature({platform: "ios", name: "CDVWKWebViewEngine", paramName: "ios-package", paramValue: "CDVWKWebViewEngine"});
+
+    await setPreference({platform: "ios", name: "DisallowOverscroll", value: "false"})
+    await setPreference({platform: "ios", name: "StatusBarOverlaysWebView", value: "true"})
+    await setPreference({platform: "ios", name: "StatusBarBackgroundColor", value: "transparent"})
+    await setPreference({platform: "ios", name: "StatusBarStyle", value: "lightcontent"})
 }
 
 
@@ -271,6 +305,20 @@ function createAppSiteDir() {
 }
 
 
+function sendAppSiteToServer() {
+    let json = JSON.parse(fs.readFileSync(yolConfigPathDest));
+    let projectName = json.appID.replace(/\./g, "_");
+
+    common.callBash(`rsync`,  ["-rip",  "-e", "ssh -i " + process.env.HOME + "/.ssh/id_rsa_ovh", "app-site/", `xab@vps820143.ovh.net:home/lab/${projectName}`,"--exclude='.git/'", "--exclude='doc/'",  "--delete" ], {cwd: "./"});
+
+    // common.callBashLine(`rsync -rip -e 'ssh -i ${process.env.HOME}/.ssh/id_rsa_ovh' app-site/ xab@vps820143.ovh.net:home/lab/${projectName} --exclude='.git/' --delete`, {cwd: "./"});
+    // common.callBashLine(`ssh xab@vps820143.ovh.net "find 'home/lab/${projectName}' -type d -print0 | xargs -0 chmod 0775"`, {cwd: "./"});
+    // common.callBashLine(`ssh xab@vps820143.ovh.net "chmod 775 $(find home/lab/${projectName} -type d)"`, {cwd: "./"});
+    common.callBash(`ssh`,  ["xab@vps820143.ovh.net", `chmod 777 $(find home/lab/${projectName} -type d)`], {cwd: "./"});
+    // common.callBash(`ssh`,  ["xab@vps820143.ovh.net", `chmod 664 $(find home/lab/${projectName} -type f)`], {cwd: "./"});
+}
+
+
 async function createIconAndSplash() {
     common.callBash("cp", ["sources/assets/icon.png", path.normalize(cwd+"/icon.png")]);
     common.callBash("cp", ["sources/assets/splash.png", path.normalize(cwd+"/splash.png")]);
@@ -280,7 +328,8 @@ async function createIconAndSplash() {
 
     // now needed for android
     copyDir(cwd + "/platforms/android/app/src/main/res", cwd + "/res");
-    console.log("seticonldpi");
+    await setPreference({platform: "android", name: "SplashMaintainAspectRatio", value: true});
+    
     
     await setIcon({platform:"android", src: "res/mipmap-ldpi/icon.png", density:"ldpi"})
     console.log("seticonmdpi");
@@ -576,14 +625,20 @@ function createGit({directory="./"}={}) {
 
 
 function addScriptsToPackageJSON() {
-    common.callBash("npm", ["init", "--yes"], {cwd: "./"});
+    if (!fs.ensureFileSync(mainPackageJSON)) {
+        common.callBash("npm", ["init", "--yes"], {cwd: "./"});
+    }
 
     let json = JSON.parse(fs.readFileSync(mainPackageJSON));
     json.scripts = {
         IOS_Build: "yoltools IOS_Build",
         ANDROID_Build_DEBUG: "yoltools ANDROID_Build_DEBUG",
         ANDROID_Build_RELEASE: "yoltools ANDROID_Build_RELEASE",
-        makePluginsPackagesForSite: "yoltools makePluginsPackagesForSite"
+        makePluginsPackagesForSite: "yoltools makePluginsPackagesForSite",
+        copyPluginsPackagesToAppSiteDir: "yoltools copyPluginsPackagesToAppSiteDir",
+        sendAppSiteToServer: "yoltools sendAppSiteToServer",
+        addScriptsToPackageJSON: "yoltools addScriptsToPackageJSON",
+        createAppSiteDir: "yoltools createAppSiteDir",
     }
 
     fs.writeFileSync(mainPackageJSON, JSON.stringify(json, null, 4));
@@ -715,6 +770,7 @@ async function incVersion() {
             properties: {
               version: {
                 description: `Version number (current: ${currentVersion}) type same, major, minor or patch`,
+                default: 'same', 
                 pattern: /^(same|major|minor|patch)$/,
                 message: 'type same, major, minor or patch',
                 required: true
