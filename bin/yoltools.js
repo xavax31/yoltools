@@ -143,15 +143,19 @@ function addSite() {
     prompt.start();
 
     prompt.get(schema, function (err, result) {
-        const yolConfigPathDest = path.normalize("etc/yolconfig.json");
-		fs.writeFileSync(yolConfigPathDest, JSON.stringify({}, null, 4));
+        const yolConfigPathDest = path.normalize(`${result.appDirName}/yolconfig.json`);
+
 
 		let steps = [];
 
 
         steps.push(()=>common.copyDir(path.normalize(__dirname + "/assets/models/simpleweb"), result.appDirName));
+
+        steps.push(()=>{
+            fs.writeFileSync(yolConfigPathDest, JSON.stringify({buildPath: "", remotePath: result.urlDir}, null, 4));
+        })
     
-        common.runSteps(steps, yolConfigPathDest);
+        common.runSteps(steps);
     })
 }
 

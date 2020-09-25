@@ -8,7 +8,7 @@ var app = {
 
     onDeviceReady: function() {
 
-        // location.href = "https://www.dev.mugconnect.com/test-cordova";
+        // location.href = "https://192.168.1.80:8080";
 
         setTimeout(function() {
             navigator.splashscreen.hide();

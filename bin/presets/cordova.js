@@ -173,7 +173,13 @@ class CreateCordova {
         
             That's all for project installation.
         
-            Now you can compile android & ios projects
+			Now you can compile android & ios projects
+			
+			To Launch local Site: 
+			cd app-site
+			symfony server:start --port=8080 --no-tls --allow-http
+
+			Note: local symfony https not working. --no-tls & --allow-http are to fore http
             `);
 		});
 
@@ -265,7 +271,7 @@ class CreateCordova {
 			common.copyFile( "sources/notifications/GoogleService-Info.plist", cwd + "/GoogleService-Info.plist" );
 		}
 
-		common.callBashLine( "cordova build ios --buildFlag='-UseModernBuildSystem=0'", { cwd } );
+		common.callBashLine( "cordova prepare ios --buildFlag='-UseModernBuildSystem=0'", { cwd } );
 		common.callBashLine( `open -a xcode platforms/ios/${json.appName}.xcworkspace`, { cwd } );
 	}
 
